@@ -147,4 +147,12 @@ jobs:
         run: |
           kustomize edit set image backend="${ECR_REPOSITORY}:${GITHUB_SHA}"
           kustomize build | kubectl apply -f -
-          kubectl rollout status deployment/backend --timeout=180s
+          kubectl rollout status deployment/backend --timeout=60s
+
+      - name: Diagnose deployment failure
+        if: failure()
+        run: |
+          kubectl get nodes
+          kubectl get pods -o wide
+          kubectl describe pods -l app=backend
+          kubectl logs -l app=backend --all-containers --tail=100 || true
